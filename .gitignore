@@ -2,7 +2,7 @@ build
 *.swp
 tags
 cscope.*
-keyboard_controller_backups
+keyboard-controller-backups
 
 # Ignore list for KiCAD Projects# Temporary files
 *.000
