@@ -13,11 +13,7 @@
 #define DAC_PIN_CS 13 // GP13
 #define DAC_PIN_SCK 10 // GP10
 #define DAC_PIN_MOSI 11 // GP11
-
-#define DAC_CTRL_BITS 0b0110
-#define DAC_VAL_MASK 0b000011111111
-#define DAC_GAIN 1
-#define DAC_REFV 2.5
+#define DAC_REFV 2.5 // Using a TL431 in it's default state
 #define DAC_CLK_SPEED (1000 * 1000)
 
 #define CV_OPAMP_GAIN 3.2
