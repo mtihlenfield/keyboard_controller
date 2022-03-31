@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/../libraries/KiCad-RP-Pico/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
+  (lib (name "Royal_Ohm_Resistors")(type "KiCad")(uri "${KIPRJMOD}/../libraries/Royal_Ohm_Resistors.pretty")(options "")(descr ""))
+  (lib (name "WEALTH_METAL_Barrel_Jacks")(type "KiCad")(uri "${KIPRJMOD}/../libraries/WEALTH_METAL_Barrel_Jacks.pretty")(options "")(descr ""))
+)

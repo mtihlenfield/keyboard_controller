@@ -18,7 +18,7 @@
 
 #define CV_OPAMP_GAIN 3.2
 
-#define GATE_OUT_PIN 2 // GP2
+#define GATE_OUT_PIN 28 // GP28
 
 
 const uint LED_PIN = 25;
