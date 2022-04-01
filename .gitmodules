@@ -4,3 +4,6 @@
 [submodule "firmware/pico-sdk"]
 	path = firmware/pico-sdk
 	url = https://github.com/raspberrypi/pico-sdk.git
+[submodule "hardware/libraries/AudioJacks"]
+	path = hardware/libraries/AudioJacks
+	url = git@github.com:clacktronics/AudioJacks.git
