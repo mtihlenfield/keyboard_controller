@@ -3,4 +3,5 @@
   (lib (name "Royal_Ohm_Resistors")(type "KiCad")(uri "${KIPRJMOD}/../libraries/Royal_Ohm_Resistors.pretty")(options "")(descr ""))
   (lib (name "WEALTH_METAL_Barrel_Jacks")(type "KiCad")(uri "${KIPRJMOD}/../libraries/WEALTH_METAL_Barrel_Jacks.pretty")(options "")(descr ""))
   (lib (name "AudioJacks")(type "KiCad")(uri "${KIPRJMOD}/../libraries/AudioJacks/AudioJacks.pretty")(options "")(descr ""))
+  (lib (name "AEC_Capacitors")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/AEC_Capacitors.pretty")(options "")(descr ""))
 )
