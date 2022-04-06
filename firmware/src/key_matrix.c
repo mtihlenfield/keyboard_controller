@@ -5,7 +5,7 @@
 
 #include "key_matrix.h"
 
-#define SHIFT_REG_CLK_PIN 27 // GP27
+#define SHIFT_REG_CLK_PIN 22 // GP22
 #define SHIFT_REG_DATA_PIN 26 // GP26
 
 // NOTE rows are held high,

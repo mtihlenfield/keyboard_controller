@@ -71,15 +71,15 @@ int main()
         return 1;
     }
 
-    // key_matrix_loop();
+    key_matrix_loop();
 
-    float scale[12] = {2.000, 2.083, 2.166, 2.250, 2.333, 2.416, 2.500, 2.583, 2.666, 2.750, 2.833, 2.916};
+    // float scale[12] = {2.000, 2.083, 2.166, 2.250, 2.333, 2.416, 2.500, 2.583, 2.666, 2.750, 2.833, 2.916};
 
-    while (1) {
-        for (int i = 0; i < 12; i++) {
-            printf("Setting CV out to %f volts\n", scale[i]);
-            set_cv_output(scale[i]);
-            sleep_ms(500);
-        }
-    }
+    // while (1) {
+    //     for (int i = 0; i < 12; i++) {
+    //         printf("Setting CV out to %f volts\n", scale[i]);
+    //         set_cv_output(scale[i]);
+    //         sleep_ms(50);
+    //     }
+    // }
 }
