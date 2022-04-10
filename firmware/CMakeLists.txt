@@ -13,13 +13,19 @@ add_executable(keyboard
   src/keyboard.c
   src/mcp4921.c
   src/key_matrix.c
+  src/lkp_stack.c
   include/mcp4921.h
   include/key_matrix.h
+  include/list.h
+  include/lkp_stack.h
 )
 
 target_include_directories(keyboard PRIVATE include)
 
-target_link_libraries(keyboard pico_stdlib hardware_spi)
+target_link_libraries(keyboard
+	pico_stdlib
+	pico_multicore
+	hardware_spi)
 
 
 pico_add_extra_outputs(keyboard)
