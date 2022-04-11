@@ -19,6 +19,8 @@
 #define DAC_REFV 2.5 // Using a TL431 in it's default state
 #define DAC_CLK_SPEED (1000 * 1000) // TODO how fast can we go?
 
+// Amount of gain applied to the CV signal by our op-amp
+// configuration.
 #define CV_OPAMP_GAIN 3.2
 
 #define GATE_OUT_PIN 5 // GP5
@@ -107,10 +109,10 @@ void keypress_irq(void) {
                 event_type,
                 key_id);
 
-	if (!key_id) {
-	    // TODO figure out why this happens on boot
+        if (!key_id) {
+            // TODO figure out why this happens on boot
             continue;
-	}
+        }
 
         if (KEY_PRESSED == event_type) {
             lkp_push_key(&g_state.key_press_stack, key_id);
@@ -150,12 +152,13 @@ int main(void)
 
     gpio_init(GATE_OUT_PIN);
     gpio_set_dir(GATE_OUT_PIN, GPIO_OUT);
+    gpio_put(GATE_OUT_PIN, 0);
 
     memset(&g_state, 0, sizeof(struct keyboard_state));
 
     if (lkp_stack_init(&g_state.key_press_stack)) {
         printf("Failed to init lkp stack");
-	return 1;
+        return 1;
     }
 
     if (init_cv_dac(&g_state.dac)) {

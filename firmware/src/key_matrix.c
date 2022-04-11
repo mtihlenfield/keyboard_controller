@@ -92,29 +92,29 @@ void key_matrix_loop(void)
                 uint8_t was_pressed = key_state[key];
 
                 // TODO debouncing: http://www.ganssle.com/debouncing-pt2.htm
-        	// https://my.eng.utah.edu/~cs5780/debouncing.pdf
-        	// I'm working with conductive elastomer switches on the keybed. Not sure if debouncing needed
-        	// Note that I don't see any bouncing on the scope, but I do see some odd stuff where the signal never
-        	// goes below ~1.8v. That stops happening when I introduce a delay. Am I not giving enought time for the
-        	// pin to go low?
-        	//
-        	// Could the diode drop be a problem?  Input pin never goes below 640mV. logic low is
-        	// 800mV and below
+                // https://my.eng.utah.edu/~cs5780/debouncing.pdf
+                // I'm working with conductive elastomer switches on the keybed. Not sure if debouncing needed
+                // Note that I don't see any bouncing on the scope, but I do see some odd stuff where the signal never
+                // goes below ~1.8v. That stops happening when I introduce a delay. Am I not giving enought time for the
+                // pin to go low?
+                //
+                // Could the diode drop be a problem?  Input pin never goes below 640mV. logic low is
+                // 800mV and below
                 if (is_pressed && !was_pressed) {
+                    // TODO without these prints the loop happens too quickly
                     printf("Key pressed: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-		            multicore_fifo_push_blocking(key_event_create(KEY_PRESSED, key));
+                multicore_fifo_push_blocking(key_event_create(KEY_PRESSED, key));
                     key_state[key] = 1;
                 } else if (!is_pressed && was_pressed) {
                     printf("Key released: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-		            multicore_fifo_push_blocking(key_event_create(KEY_RELEASED, key));
+                    multicore_fifo_push_blocking(key_event_create(KEY_RELEASED, key));
                     key_state[key] = 0;
                 }
-
-        	// TODO without this sleep here, I see two button presses/releases for
-        	// every actual button press/release. Need to figure out why that is.
-        	// One thing I noticed: When a button is pressed the input goes low in a few hundred ns,
-        	// but it takes ~2.5us to get back up again. I think it may be the case that we're moving
-        	// too quickly for the input to go all the way back up to 3.3v (really, 2v)
+                // TODO without this sleep here, I see two button presses/releases for
+                // every actual button press/release. Need to figure out why that is.
+                // One thing I noticed: When a button is pressed the input goes low in a few hundred ns,
+                // but it takes ~2.5us to get back up again. I think it may be the case that we're moving
+                // too quickly for the input to go all the way back up to 3.3v (really, 2v)
                 sleep_us(750);
             }
         }
