@@ -9,6 +9,9 @@
 #define SHIFT_REG_CLK_PIN 26 // GP22
 #define SHIFT_REG_DATA_PIN 22 // GP26
 
+// Total number of shift register outputs
+#define SHIFT_REG_OUTPUTS 16
+
 // NOTE rows are held high,
 #define KEYBOARD_ROWS 6
 #define KEYBOARD_COLS 9
@@ -34,6 +37,7 @@ static inline void clock_shift_reg(int clk_pin)
     // The uC is too fast for the shift reg without this sleep.
     // TODO: Do some calculations to figure out how long we should be sleeping
     sleep_us(1);
+    // 74HC164N clock pulse width should be a min of 120ns
     gpio_put(SHIFT_REG_CLK_PIN, 0);
 }
 
@@ -69,11 +73,7 @@ int key_matrix_init(void)
 void key_matrix_loop(void)
 {
     while (1) {
-        // TODO: figure out a way to not have to use all 16 outputs
-        //       currently I have to do this because the second shift
-        //       register doesn't get reset at the end of the columns,
-        //       so it gets out of sync
-        for (uint8_t col = 0; col < 16; col++) {
+        for (uint8_t col = 0; col < SHIFT_REG_OUTPUTS; col++) {
             if (0 == col) {
                 gpio_put(SHIFT_REG_DATA_PIN, 0);
             } else {
@@ -82,6 +82,11 @@ void key_matrix_loop(void)
 
             clock_shift_reg(SHIFT_REG_CLK_PIN);
 
+            // We have more shift register outputs than keyboard columns
+            // and we have to either a) use a pin to reset the shift regs
+            // after looping through all of the cols or b) clock through all
+            // of the shift reg outputs. I decided to save a pin since we
+            // don't need the extra processor cycles
             if (col >= KEYBOARD_COLS) {
                 continue;
             }
@@ -93,28 +98,26 @@ void key_matrix_loop(void)
 
                 // TODO debouncing: http://www.ganssle.com/debouncing-pt2.htm
                 // https://my.eng.utah.edu/~cs5780/debouncing.pdf
-                // I'm working with conductive elastomer switches on the keybed. Not sure if debouncing needed
-                // Note that I don't see any bouncing on the scope, but I do see some odd stuff where the signal never
-                // goes below ~1.8v. That stops happening when I introduce a delay. Am I not giving enought time for the
-                // pin to go low?
-                //
-                // Could the diode drop be a problem?  Input pin never goes below 640mV. logic low is
-                // 800mV and below
+                // I'm working with conductive elastomer switches on the keybed. I have not seen bouncing
+                // on the keybed keys, but I think it's possible, and will almost certainly happen
+                // with the buttons I plan to use for other functions
                 if (is_pressed && !was_pressed) {
                     // TODO without these prints the loop happens too quickly
                     printf("Key pressed: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-                multicore_fifo_push_blocking(key_event_create(KEY_PRESSED, key));
+                    multicore_fifo_push_blocking(key_event_create(KEY_PRESSED, key));
                     key_state[key] = 1;
                 } else if (!is_pressed && was_pressed) {
                     printf("Key released: %d, (N%d, B%d)\n", key, row + 1, col + 1);
                     multicore_fifo_push_blocking(key_event_create(KEY_RELEASED, key));
                     key_state[key] = 0;
                 }
-                // TODO without this sleep here, I see two button presses/releases for
+                // TODO without this sleep here, I see ~2 button presses/releases for
                 // every actual button press/release. Need to figure out why that is.
-                // One thing I noticed: When a button is pressed the input goes low in a few hundred ns,
-                // but it takes ~2.5us to get back up again. I think it may be the case that we're moving
-                // too quickly for the input to go all the way back up to 3.3v (really, 2v)
+                // The key matrix diodes are ISS133's, which are switching diodes with a
+                // ~1.2ns switching speed, and the shift registers
+                //
+                // Could the diode drop be a problem?  Input pin never goes below 640mV. logic low is
+                // 800mV and below
                 sleep_us(750);
             }
         }

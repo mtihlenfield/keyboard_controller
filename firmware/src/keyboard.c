@@ -17,7 +17,7 @@
 #define DAC_PIN_SCK 10 // GP10
 #define DAC_PIN_MOSI 11 // GP11
 #define DAC_REFV 2.5 // Using a TL431 in it's default state
-#define DAC_CLK_SPEED (1000 * 1000) // TODO how fast can we go?
+#define DAC_CLK_SPEED (1000 * 1000) // 1Mhz
 
 // Amount of gain applied to the CV signal by our op-amp
 // configuration.
@@ -43,7 +43,7 @@ static int init_cv_dac(struct mcp4921 *dac)
 {
     memset(dac, 0, sizeof(struct mcp4921));
 
-    // Setting up the pints we will use to communicate with the DAC
+    // Setting up the pins we will use to communicate with the DAC
     dac->clk_pin = DAC_PIN_SCK; // Clock pin
     dac->cs_pin = DAC_PIN_CS; // Chip select pin
     dac->mosi_pin = DAC_PIN_MOSI; // Data out pin
@@ -94,7 +94,6 @@ static inline void play_last_note(struct keyboard_state *state)
 
     set_gate(1);
     float cv = key_to_cv(state, current_note);
-    printf("Desired Output voltage: %f\n", cv);
     mcp4921_set_output(&state->dac, cv / CV_OPAMP_GAIN);
 }
 
@@ -105,9 +104,6 @@ void keypress_irq(void) {
     while(multicore_fifo_rvalid()) {
         key_event_t key_event = multicore_fifo_pop_blocking();
         key_event_unpack(key_event, &event_type, &key_id);
-        printf("Got key event: pressed: %d, key: %d\n",
-                event_type,
-                key_id);
 
         if (!key_id) {
             // TODO figure out why this happens on boot
@@ -125,7 +121,7 @@ void keypress_irq(void) {
             if (was_last_pressed) {
                 // If this was the last key pressed then either:
                 // a) There are no other keys pressed and we want gate low
-                // b) There are other keys keys pressed and we want to retrigger
+                // b) There are other keys pressed and we want to retrigger
                 set_gate(0);
             } else {
                 // Don't need to update gate or CV if a key
@@ -152,7 +148,7 @@ int main(void)
 
     gpio_init(GATE_OUT_PIN);
     gpio_set_dir(GATE_OUT_PIN, GPIO_OUT);
-    gpio_put(GATE_OUT_PIN, 0);
+    set_gate(0);
 
     memset(&g_state, 0, sizeof(struct keyboard_state));
 
