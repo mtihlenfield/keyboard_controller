@@ -2348,11 +2348,6 @@
     (uuid feebedb6-b9cf-46bc-a70e-b325337b936c)
   )
 
-  (text "TODO: Change keyboard connector footprint to 16pin IDC"
-    (at 214.63 15.24 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
-    (uuid 1af1ccdc-4424-4809-bb24-7391fce39b3d)
-  )
   (text "TODO: The LM1117 Tab is Vout!" (at 214.63 24.13 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 9bdc1c4a-b5e8-4104-8343-beab0b766ae2)
@@ -2677,7 +2672,7 @@
     (uuid 0ad4f42e-3f7d-4f1a-a0d8-8aff92bbf5d3)
     (property "Reference" "J1" (id 0) (at 24.13 59.69 0))
     (property "Value" "Keybed_Connector" (id 1) (at 24.13 57.15 0))
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x15_P2.54mm_Vertical" (id 2) (at 21.59 36.83 0)
+    (property "Footprint" "Connector_IDC:IDC-Header_2x08_P2.54mm_Vertical" (id 2) (at 21.59 36.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 21.59 36.83 0)
@@ -2902,7 +2897,7 @@
   (symbol (lib_id "power:+3.3V") (at 128.27 92.71 90) (mirror x) (unit 1)
     (in_bom yes) (on_board yes)
     (uuid 31770e7f-32b1-45bb-a492-7d715b566d2b)
-    (property "Reference" "#PWR?" (id 0) (at 132.08 92.71 0)
+    (property "Reference" "#PWR0102" (id 0) (at 132.08 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3V" (id 1) (at 119.38 92.71 90)
@@ -4060,7 +4055,7 @@
       (reference "#PWR0101") (unit 1) (value "+3.3V") (footprint "")
     )
     (path "/31770e7f-32b1-45bb-a492-7d715b566d2b"
-      (reference "#PWR?") (unit 1) (value "+3.3V") (footprint "")
+      (reference "#PWR0102") (unit 1) (value "+3.3V") (footprint "")
     )
     (path "/166f34cf-82f0-4a5a-ad24-51c9547c2601"
       (reference "C1") (unit 1) (value "0.33uF") (footprint "Capacitor_THT:CP_Radial_Tantal_D4.5mm_P2.50mm")
@@ -4093,7 +4088,7 @@
       (reference "D1") (unit 1) (value "1N5818") (footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal")
     )
     (path "/0ad4f42e-3f7d-4f1a-a0d8-8aff92bbf5d3"
-      (reference "J1") (unit 1) (value "Keybed_Connector") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x15_P2.54mm_Vertical")
+      (reference "J1") (unit 1) (value "Keybed_Connector") (footprint "Connector_IDC:IDC-Header_2x08_P2.54mm_Vertical")
     )
     (path "/cf784822-648c-46a3-a790-edcd7292ca65"
       (reference "J2") (unit 1) (value "Debug_Pins") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical")

@@ -6,8 +6,8 @@
 
 #include "key_matrix.h"
 
-#define SHIFT_REG_CLK_PIN 26 // GP22
-#define SHIFT_REG_DATA_PIN 22 // GP26
+#define SHIFT_REG_CLK_PIN 26 // GP26
+#define SHIFT_REG_DATA_PIN 22 // GP22
 
 // Total number of shift register outputs
 #define SHIFT_REG_OUTPUTS 16
@@ -48,12 +48,11 @@ int key_matrix_init(void)
     gpio_set_dir(SHIFT_REG_CLK_PIN, GPIO_OUT);
     gpio_set_dir(SHIFT_REG_DATA_PIN, GPIO_OUT);
 
-    gpio_put(SHIFT_REG_DATA_PIN, 0);
     gpio_put(SHIFT_REG_CLK_PIN, 0);
 
     // Set all of the shift register outputs high
     gpio_put(SHIFT_REG_DATA_PIN, 1);
-    for (uint8_t i = 0; i < 16; i++) {
+    for (uint8_t i = 0; i < SHIFT_REG_OUTPUTS; i++) {
         clock_shift_reg(SHIFT_REG_CLK_PIN);
     }
 
