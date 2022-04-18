@@ -5,6 +5,7 @@
 
 typedef uint32_t key_event_t;
 
+#define KM_EVENT_QUEUE_SIZE 10
 #define KEY_PRESSED 1
 #define KEY_RELEASED 0
 
@@ -25,19 +26,23 @@ enum key_id {
     KEY_C5 = 49
 };
 
-static inline void key_event_unpack(key_event_t key_event, uint8_t *type, uint32_t *key_id)
+inline void key_event_unpack(key_event_t key_event, uint8_t *type, uint32_t *key_id)
 {
     *type = (key_event & 0xff000000) >> 24;
     *key_id = key_event & 0x00ffffff;
 }
 
-static inline key_event_t key_event_create(uint8_t type, enum key_id key)
+inline key_event_t key_event_create(uint8_t type, enum key_id key)
 {
     return (type << 24) | key;
 }
 
-int key_matrix_init(void);
+int km_event_queue_ready(void);
 
-void key_matrix_loop(void);
+key_event_t km_event_queue_pop_blocking(void);
+
+int km_init(void);
+
+void km_loop(void);
 
 #endif

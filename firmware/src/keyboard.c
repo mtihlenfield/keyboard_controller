@@ -97,43 +97,35 @@ static inline void play_last_note(struct keyboard_state *state)
     mcp4921_set_output(&state->dac, cv / CV_OPAMP_GAIN);
 }
 
-void keypress_irq(void) {
+void handle_key_event(key_event_t key_event) {
     uint8_t event_type = 0;
     uint32_t key_id = 0;
 
-    while(multicore_fifo_rvalid()) {
-        key_event_t key_event = multicore_fifo_pop_blocking();
-        key_event_unpack(key_event, &event_type, &key_id);
+    key_event_unpack(key_event, &event_type, &key_id);
 
-        if (!key_id) {
-            // TODO figure out why this happens on boot
-            continue;
-        }
+    if (KEY_PRESSED == event_type) {
+        lkp_push_key(&g_state.key_press_stack, key_id);
+        printf("Key %d pressed\n", key_id);
 
-        if (KEY_PRESSED == event_type) {
-            lkp_push_key(&g_state.key_press_stack, key_id);
-
-            // If gate is low, this won't matter
-            // If gate is high, we want to retrigger it
+        // If gate is low, this won't matter
+        // If gate is high, we want to retrigger it
+        set_gate(0);
+    } else {
+        uint8_t was_last_pressed = lkp_pop_key(&g_state.key_press_stack, key_id);
+        printf("Key %d released\n", key_id);
+        if (was_last_pressed) {
+            // If this was the last key pressed then either:
+            // a) There are no other keys pressed and we want gate low
+            // b) There are other keys pressed and we want to retrigger
             set_gate(0);
         } else {
-            uint8_t was_last_pressed = lkp_pop_key(&g_state.key_press_stack, key_id);
-            if (was_last_pressed) {
-                // If this was the last key pressed then either:
-                // a) There are no other keys pressed and we want gate low
-                // b) There are other keys pressed and we want to retrigger
-                set_gate(0);
-            } else {
-                // Don't need to update gate or CV if a key
-                // was released that wasn't the most recent key
-                continue;
-            }
+            // Don't need to update gate or CV if a key
+            // was released that wasn't the most recent key
+            return;
         }
-
-        play_last_note(&g_state);
     }
 
-    multicore_fifo_clear_irq();
+    play_last_note(&g_state);
 }
 
 int main(void)
@@ -162,18 +154,18 @@ int main(void)
         return 1;
     }
 
-    if (key_matrix_init()) {
+    if (km_init()) {
         printf("Failed to init key matrix");
         return 1;
     }
 
-    multicore_launch_core1(key_matrix_loop);
-
-    irq_set_exclusive_handler(SIO_IRQ_PROC0, keypress_irq);
-    irq_set_enabled(SIO_IRQ_PROC0, true);
+    multicore_launch_core1(km_loop);
 
     while (1) {
-        tight_loop_contents();
+        while (km_event_queue_ready()) {
+            key_event_t key_event = km_event_queue_pop_blocking();
+            handle_key_event(key_event);
+        }
     }
 
 }

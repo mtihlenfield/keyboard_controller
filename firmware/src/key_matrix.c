@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "pico/util/queue.h"
 #include "hardware/gpio.h"
 
 #include "key_matrix.h"
@@ -29,7 +30,10 @@ const uint8_t key_matrix[KEYBOARD_ROWS][KEYBOARD_COLS] = {
     {KEY_C1, KEY_FS1, KEY_C2, KEY_FS2, KEY_C3, KEY_FS3, KEY_C4, KEY_FS4, KEY_C5},
 };
 
-uint8_t key_state[KEYBOARD_ROWS * KEYBOARD_COLS];
+struct km_state {
+    uint8_t key_state[KEYBOARD_ROWS * KEYBOARD_COLS];
+    queue_t event_queue;
+} g_km_state;
 
 static inline void clock_shift_reg(int clk_pin)
 {
@@ -41,7 +45,20 @@ static inline void clock_shift_reg(int clk_pin)
     gpio_put(SHIFT_REG_CLK_PIN, 0);
 }
 
-int key_matrix_init(void)
+int km_event_queue_ready(void)
+{
+    return !queue_is_empty(&g_km_state.event_queue);
+}
+
+key_event_t km_event_queue_pop_blocking(void)
+{
+    key_event_t temp;
+    queue_remove_blocking(&g_km_state.event_queue, &temp);
+
+    return temp;
+}
+
+int km_init(void)
 {
     gpio_init(SHIFT_REG_CLK_PIN);
     gpio_init(SHIFT_REG_DATA_PIN);
@@ -64,12 +81,14 @@ int key_matrix_init(void)
         gpio_pull_up(pin);
     }
 
-    memset(&key_state, 0, sizeof(key_state));
+    memset(&g_km_state, 0, sizeof(struct km_state));
+
+    queue_init(&g_km_state.event_queue, sizeof(key_event_t), KM_EVENT_QUEUE_SIZE);
 
     return 0;
 }
 
-void key_matrix_loop(void)
+void km_loop(void)
 {
     while (1) {
         for (uint8_t col = 0; col < SHIFT_REG_OUTPUTS; col++) {
@@ -93,7 +112,8 @@ void key_matrix_loop(void)
             for (uint8_t row = 0; row < KEYBOARD_ROWS; row++) {
                 uint8_t is_pressed = !gpio_get(key_row_pins[row]);
                 uint8_t key = key_matrix[row][col];
-                uint8_t was_pressed = key_state[key];
+                uint8_t was_pressed = g_km_state.key_state[key];
+		key_event_t key_event;
 
                 // TODO debouncing: http://www.ganssle.com/debouncing-pt2.htm
                 // https://my.eng.utah.edu/~cs5780/debouncing.pdf
@@ -103,12 +123,16 @@ void key_matrix_loop(void)
                 if (is_pressed && !was_pressed) {
                     // TODO without these prints the loop happens too quickly
                     printf("Key pressed: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-                    multicore_fifo_push_blocking(key_event_create(KEY_PRESSED, key));
-                    key_state[key] = 1;
+		    key_event = key_event_create(KEY_PRESSED, key);
+                    g_km_state.key_state[key] = 1;
+
+                    queue_add_blocking(&g_km_state.event_queue, &key_event);
                 } else if (!is_pressed && was_pressed) {
                     printf("Key released: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-                    multicore_fifo_push_blocking(key_event_create(KEY_RELEASED, key));
-                    key_state[key] = 0;
+		    key_event = key_event_create(KEY_RELEASED, key);
+                    g_km_state.key_state[key] = 0;
+
+                    queue_add_blocking(&g_km_state.event_queue, &key_event);
                 }
                 // TODO without this sleep here, I see ~2 button presses/releases for
                 // every actual button press/release. Need to figure out why that is.

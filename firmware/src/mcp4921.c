@@ -34,7 +34,6 @@ int mcp4921_set_output(struct mcp4921 *dac, float volts)
 {
     unsigned int gain = mcp4921_get_gain(dac) == MCP4921_GAIN_1X ? 1 : 2;
     float dac_value = floor((MCP4921_MAX_VAL * volts) / (dac->refv * gain));
-    printf("Dac value: %f\n");
 
     uint16_t dac_out = (dac->cmd_flags << 12) | (uint16_t) dac_value;
     cs_select(dac);
