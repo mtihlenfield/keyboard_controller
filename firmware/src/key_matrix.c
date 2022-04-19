@@ -16,7 +16,13 @@
 // NOTE rows are held high,
 #define KEYBOARD_ROWS 6
 #define KEYBOARD_COLS 9
-#define NUM_KEYBOARD_KEYS 49
+#define NUM_KEYBOARD_KEYS (KEYBOARD_ROWS * KEYBOARD_COLS)
+
+// Determines how frequently the entire key matrix is
+// scanned. One col is scanned per poll, so this number
+// is divided by KEYBOARD_COLS to determine how frequently
+// the poll function runs
+#define KEY_POLL_INTERVAL_US 2000
 
 const uint8_t key_row_pins[KEYBOARD_ROWS] = {16, 17, 18, 19, 20, 21};
 
@@ -33,16 +39,17 @@ const uint8_t key_matrix[KEYBOARD_ROWS][KEYBOARD_COLS] = {
 struct km_state {
     uint8_t key_state[KEYBOARD_ROWS * KEYBOARD_COLS];
     queue_t event_queue;
+    uint8_t current_col;
+    repeating_timer_t poll_timer;
 } g_km_state;
 
 static inline void clock_shift_reg(int clk_pin)
 {
-    gpio_put(SHIFT_REG_CLK_PIN, 1);
-    // The uC is too fast for the shift reg without this sleep.
-    // TODO: Do some calculations to figure out how long we should be sleeping
     sleep_us(1);
-    // 74HC164N clock pulse width should be a min of 120ns
+    gpio_put(SHIFT_REG_CLK_PIN, 1);
+    sleep_us(1);
     gpio_put(SHIFT_REG_CLK_PIN, 0);
+    sleep_us(1);
 }
 
 int km_event_queue_ready(void)
@@ -88,61 +95,62 @@ int km_init(void)
     return 0;
 }
 
-void km_loop(void)
+bool km_poll_keys(repeating_timer_t *timer)
 {
-    while (1) {
-        for (uint8_t col = 0; col < SHIFT_REG_OUTPUTS; col++) {
-            if (0 == col) {
-                gpio_put(SHIFT_REG_DATA_PIN, 0);
-            } else {
-                gpio_put(SHIFT_REG_DATA_PIN, 1);
-            }
-
+    if (0 == g_km_state.current_col) {
+        gpio_put(SHIFT_REG_DATA_PIN, 0);
+    } else if (g_km_state.current_col >= KEYBOARD_COLS) {
+        for (uint8_t i = 0; i < (SHIFT_REG_OUTPUTS - KEYBOARD_COLS); i++) {
             clock_shift_reg(SHIFT_REG_CLK_PIN);
+        }
 
-            // We have more shift register outputs than keyboard columns
-            // and we have to either a) use a pin to reset the shift regs
-            // after looping through all of the cols or b) clock through all
-            // of the shift reg outputs. I decided to save a pin since we
-            // don't need the extra processor cycles
-            if (col >= KEYBOARD_COLS) {
-                continue;
-            }
+        g_km_state.current_col = 0;
 
-            for (uint8_t row = 0; row < KEYBOARD_ROWS; row++) {
-                uint8_t is_pressed = !gpio_get(key_row_pins[row]);
-                uint8_t key = key_matrix[row][col];
-                uint8_t was_pressed = g_km_state.key_state[key];
-		key_event_t key_event;
+        return true;
+    } else {
+        gpio_put(SHIFT_REG_DATA_PIN, 1);
+    }
 
-                // TODO debouncing: http://www.ganssle.com/debouncing-pt2.htm
-                // https://my.eng.utah.edu/~cs5780/debouncing.pdf
-                // I'm working with conductive elastomer switches on the keybed. I have not seen bouncing
-                // on the keybed keys, but I think it's possible, and will almost certainly happen
-                // with the buttons I plan to use for other functions
-                if (is_pressed && !was_pressed) {
-                    // TODO without these prints the loop happens too quickly
-                    printf("Key pressed: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-		    key_event = key_event_create(KEY_PRESSED, key);
-                    g_km_state.key_state[key] = 1;
+    clock_shift_reg(SHIFT_REG_CLK_PIN);
 
-                    queue_add_blocking(&g_km_state.event_queue, &key_event);
-                } else if (!is_pressed && was_pressed) {
-                    printf("Key released: %d, (N%d, B%d)\n", key, row + 1, col + 1);
-		    key_event = key_event_create(KEY_RELEASED, key);
-                    g_km_state.key_state[key] = 0;
+    const uint8_t col = g_km_state.current_col;
 
-                    queue_add_blocking(&g_km_state.event_queue, &key_event);
-                }
-                // TODO without this sleep here, I see ~2 button presses/releases for
-                // every actual button press/release. Need to figure out why that is.
-                // The key matrix diodes are ISS133's, which are switching diodes with a
-                // ~1.2ns switching speed, and the shift registers
-                //
-                // Could the diode drop be a problem?  Input pin never goes below 640mV. logic low is
-                // 800mV and below
-                sleep_us(750);
-            }
+    for (uint8_t row = 0; row < KEYBOARD_ROWS; row++) {
+        uint8_t is_pressed = !gpio_get(key_row_pins[row]);
+        uint8_t key = key_matrix[row][col];
+        uint8_t was_pressed = g_km_state.key_state[key];
+        key_event_t key_event;
+
+        // TODO debouncing: http://www.ganssle.com/debouncing-pt2.htm
+        // https://my.eng.utah.edu/~cs5780/debouncing.pdf
+        // I'm working with conductive elastomer switches on the keybed. I have not seen bouncing
+        // on the keybed keys, but I think it's possible, and will almost certainly happen
+        // with the buttons I plan to use for other functions
+        if (is_pressed && !was_pressed) {
+            // TODO without these prints the loop happens too quickly
+            key_event = key_event_create(KEY_PRESSED, key);
+            g_km_state.key_state[key] = 1;
+
+            queue_add_blocking(&g_km_state.event_queue, &key_event);
+        } else if (!is_pressed && was_pressed) {
+            key_event = key_event_create(KEY_RELEASED, key);
+            g_km_state.key_state[key] = 0;
+
+            queue_add_blocking(&g_km_state.event_queue, &key_event);
         }
     }
+
+    g_km_state.current_col++;
+
+    return true;
+}
+
+void km_main(void)
+{
+    add_repeating_timer_us(
+        KEY_POLL_INTERVAL_US / KEYBOARD_COLS,
+        km_poll_keys,
+        0,
+        &g_km_state.poll_timer
+    );
 }

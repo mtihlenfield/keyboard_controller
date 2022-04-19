@@ -26,23 +26,44 @@ enum key_id {
     KEY_C5 = 49
 };
 
+/*
+ * Extracts the event type and key id from a key_event_t object
+ */
 inline void key_event_unpack(key_event_t key_event, uint8_t *type, uint32_t *key_id)
 {
     *type = (key_event & 0xff000000) >> 24;
     *key_id = key_event & 0x00ffffff;
 }
 
+/*
+ * Creates a key_event_t object from an event type and key id
+ */
 inline key_event_t key_event_create(uint8_t type, enum key_id key)
 {
     return (type << 24) | key;
 }
 
+/*
+ * Returns true if there are key events on the km event queue,
+ * false otherwise
+ */
 int km_event_queue_ready(void);
 
+/*
+ * Pops a key event off of the key event queue. If there is no 
+ * key event on the queue at the time of calling, the function
+ * blocks until one is added.
+ */
 key_event_t km_event_queue_pop_blocking(void);
 
+/*
+ * Initializes the keyboard matrix hardware and state
+ */
 int km_init(void);
 
-void km_loop(void);
+/*
+ * Entrypoint for the keyboard matrix code
+ */
+void km_main(void);
 
 #endif

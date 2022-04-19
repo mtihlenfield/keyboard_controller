@@ -159,7 +159,7 @@ int main(void)
         return 1;
     }
 
-    multicore_launch_core1(km_loop);
+    multicore_launch_core1(km_main);
 
     while (1) {
         while (km_event_queue_ready()) {
