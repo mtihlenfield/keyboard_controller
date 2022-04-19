@@ -15,7 +15,7 @@
 
 // NOTE rows are held high,
 #define KEYBOARD_ROWS 6
-#define KEYBOARD_COLS 9
+#define KEYBOARD_COLS 10
 #define NUM_KEYBOARD_KEYS (KEYBOARD_ROWS * KEYBOARD_COLS)
 
 // Determines how frequently the entire key matrix is
@@ -26,10 +26,9 @@
 
 const uint8_t key_row_pins[KEYBOARD_ROWS] = {16, 17, 18, 19, 20, 21};
 
-// Column 1 (B1) is currently only used for the first button
 const uint8_t key_matrix[KEYBOARD_ROWS][KEYBOARD_COLS] = {
-    {KEY_NONE, KEY_CS1, KEY_G1, KEY_CS2, KEY_G2, KEY_CS3, KEY_G3, KEY_CS4, KEY_G4},
-    {KEY_NONE, KEY_D1, KEY_GS1, KEY_D2, KEY_GS2, KEY_D3, KEY_GS3, KEY_D4, KEY_GS4},
+    {KEY_OCTAVE_UP, KEY_CS1, KEY_G1, KEY_CS2, KEY_G2, KEY_CS3, KEY_G3, KEY_CS4, KEY_G4},
+    {KEY_OCTAVE_DOWN, KEY_D1, KEY_GS1, KEY_D2, KEY_GS2, KEY_D3, KEY_GS3, KEY_D4, KEY_GS4},
     {KEY_NONE, KEY_DS1, KEY_A1, KEY_DS2, KEY_A2, KEY_DS3, KEY_A3, KEY_DS4, KEY_A4},
     {KEY_NONE, KEY_E1, KEY_AS1, KEY_E2, KEY_AS2, KEY_E3, KEY_AS3, KEY_E4, KEY_AS4},
     {KEY_NONE, KEY_F1, KEY_B1, KEY_F2, KEY_B2, KEY_F3, KEY_B3, KEY_F4, KEY_B4},

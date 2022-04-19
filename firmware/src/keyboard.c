@@ -27,6 +27,9 @@
 
 #define LED_PIN 25 // GP25
 
+#define OCTAVE_SHIFT_MAX 1
+#define OCTAVE_SHIFT_MIN -1
+
 float cv_octave[12] = {
     0.0833, 0.1667, 0.2550, 0.3333, 0.4167,
     0.5000, 0.5833, 0.6667, 0.7500, 0.8333,
@@ -79,6 +82,19 @@ static inline float key_to_cv(struct keyboard_state *state, enum key_id id)
     return key_octave + state->octave_shift + cv_octave[note];
 }
 
+static inline void octave_shift(uint8_t direction)
+{
+    if (direction) {
+        if (g_state.octave_shift < OCTAVE_SHIFT_MAX) {
+            g_state.octave_shift++;
+        }
+    } else {
+        if (g_state.octave_shift > OCTAVE_SHIFT_MIN) {
+            g_state.octave_shift--;
+        }
+    }
+}
+
 /*
  * Set gate up and use the last key that is still pressed to
  * set the CV output.
@@ -97,22 +113,16 @@ static inline void play_last_note(struct keyboard_state *state)
     mcp4921_set_output(&state->dac, cv / CV_OPAMP_GAIN);
 }
 
-void handle_key_event(key_event_t key_event) {
-    uint8_t event_type = 0;
-    uint32_t key_id = 0;
-
-    key_event_unpack(key_event, &event_type, &key_id);
-
+void handle_keybed_event(uint8_t event_type, uint32_t key_id)
+{
     if (KEY_PRESSED == event_type) {
         lkp_push_key(&g_state.key_press_stack, key_id);
-        printf("Key %d pressed\n", key_id);
 
         // If gate is low, this won't matter
         // If gate is high, we want to retrigger it
         set_gate(0);
     } else {
         uint8_t was_last_pressed = lkp_pop_key(&g_state.key_press_stack, key_id);
-        printf("Key %d released\n", key_id);
         if (was_last_pressed) {
             // If this was the last key pressed then either:
             // a) There are no other keys pressed and we want gate low
@@ -126,6 +136,19 @@ void handle_key_event(key_event_t key_event) {
     }
 
     play_last_note(&g_state);
+}
+
+void handle_func_key_event(uint8_t event_type, uint32_t key_id)
+{
+    if (KEY_RELEASED == event_type) {
+        return;
+    }
+
+    if (KEY_OCTAVE_UP == key_id) {
+        octave_shift(1);
+    } else if (KEY_OCTAVE_DOWN == key_id) {
+        octave_shift(0);
+    }
 }
 
 int main(void)
@@ -163,8 +186,18 @@ int main(void)
 
     while (1) {
         while (km_event_queue_ready()) {
+            uint8_t event_type = 0;
+            uint32_t key_id = 0;
+
             key_event_t key_event = km_event_queue_pop_blocking();
-            handle_key_event(key_event);
+            key_event_unpack(key_event, &event_type, &key_id);
+            printf("Key event: type: %d, id: %d\n", event_type, key_id);
+
+            if (is_keybed_key(key_id)) {
+                handle_keybed_event(event_type, key_id);
+            } else {
+                handle_func_key_event(event_type, key_id);
+            }
         }
     }
 

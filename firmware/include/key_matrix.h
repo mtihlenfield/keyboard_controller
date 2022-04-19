@@ -23,8 +23,15 @@ enum key_id {
     KEY_C4 = 37, KEY_CS4 = 38, KEY_D4 = 39, KEY_DS4 = 40, 
     KEY_E4 = 41, KEY_F4 = 42, KEY_FS4 = 43, KEY_G4 = 44, 
     KEY_GS4 = 45, KEY_A4 = 46, KEY_AS4 = 47, KEY_B4 = 48,
-    KEY_C5 = 49
+    KEY_C5 = 49, KEY_OCTAVE_UP=50, KEY_OCTAVE_DOWN=51
 };
+
+#define MAX_KEYBED_KEY 49
+
+inline bool is_keybed_key(uint8_t key_id) 
+{
+    return MAX_KEYBED_KEY >= key_id;
+}
 
 /*
  * Extracts the event type and key id from a key_event_t object
