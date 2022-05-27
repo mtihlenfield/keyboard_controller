@@ -2489,7 +2489,6 @@
     )
   )
 
-  (gr_rect (start 103.395 38.662712) (end 183.405 140.262712) (layer "Edge.Cuts") (width 0.1) (fill none) (tstamp fa22ecb5-be2d-4437-868f-6562f6352f9f))
   (gr_text "SWDIO" (at 156.735 130.737712 90) (layer "F.SilkS") (tstamp 0d3c3387-b151-4eda-a70d-77644ad72187)
     (effects (font (size 0.5 0.5) (thickness 0.075)))
   )

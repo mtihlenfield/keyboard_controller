@@ -414,6 +414,18 @@
     [
       "f320c268-1eb1-480a-8b17-7098639ead22",
       ""
+    ],
+    [
+      "e62cebf1-8b49-4ab0-9851-a340dc04dbf1",
+      "Power"
+    ],
+    [
+      "db9d31eb-90c6-4f42-b97b-d41061869d3f",
+      "Key Matrix"
+    ],
+    [
+      "679aab57-7a27-4204-9526-edba148bc933",
+      "input_output"
     ]
   ],
   "text_variables": {}
