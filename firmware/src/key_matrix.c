@@ -5,18 +5,9 @@
 #include "pico/util/queue.h"
 #include "hardware/gpio.h"
 
+#include "hardware_config.h"
 #include "key_matrix.h"
 
-#define SHIFT_REG_CLK_PIN 26 // GP26
-#define SHIFT_REG_DATA_PIN 22 // GP22
-
-// Total number of shift register outputs
-#define SHIFT_REG_OUTPUTS 16
-
-// NOTE rows are held high,
-#define KEYBOARD_ROWS 6
-#define KEYBOARD_COLS 11
-#define NUM_KEYBOARD_KEYS (KEYBOARD_ROWS * KEYBOARD_COLS)
 
 // Determines how frequently the entire key matrix is
 // scanned. One col is scanned per poll, so this number
@@ -24,9 +15,9 @@
 // the poll function runs
 #define KEY_POLL_INTERVAL_US 2000
 
-const uint8_t key_row_pins[KEYBOARD_ROWS] = {16, 17, 18, 19, 20, 21};
+const uint8_t key_row_pins[MATRIX_ROWS] = {16, 17, 18, 19, 20, 21};
 
-const uint8_t key_matrix[KEYBOARD_ROWS][KEYBOARD_COLS] = {
+const uint8_t key_matrix[MATRIX_ROWS][MATRIX_COLS] = {
     {KEY_OCTAVE_UP, KEY_CS1, KEY_G1, KEY_CS2, KEY_G2, KEY_CS3, KEY_G3, KEY_CS4, KEY_G4, KEY_REST},
     {KEY_OCTAVE_DOWN, KEY_D1, KEY_GS1, KEY_D2, KEY_GS2, KEY_D3, KEY_GS3, KEY_D4, KEY_GS4, KEY_HOLD},
     {KEY_PLAY_PAUSE, KEY_DS1, KEY_A1, KEY_DS2, KEY_A2, KEY_DS3, KEY_A3, KEY_DS4, KEY_A4, KEY_FUNC},
@@ -36,7 +27,7 @@ const uint8_t key_matrix[KEYBOARD_ROWS][KEYBOARD_COLS] = {
 };
 
 struct km_state {
-    uint8_t key_state[KEYBOARD_ROWS * KEYBOARD_COLS];
+    uint8_t key_state[NUM_MATRIX_KEYS];
     queue_t event_queue;
     uint8_t current_col;
     repeating_timer_t poll_timer;
@@ -79,7 +70,7 @@ int km_init(void)
         clock_shift_reg(SHIFT_REG_CLK_PIN);
     }
 
-    for (uint8_t i = 0; i < KEYBOARD_ROWS; i++) {
+    for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
         uint8_t pin = key_row_pins[i];
 
         gpio_init(pin);
@@ -98,8 +89,8 @@ bool km_poll_keys(repeating_timer_t *timer)
 {
     if (0 == g_km_state.current_col) {
         gpio_put(SHIFT_REG_DATA_PIN, 0);
-    } else if (g_km_state.current_col >= KEYBOARD_COLS) {
-        for (uint8_t i = 0; i < (SHIFT_REG_OUTPUTS - KEYBOARD_COLS); i++) {
+    } else if (g_km_state.current_col >= MATRIX_COLS) {
+        for (uint8_t i = 0; i < (SHIFT_REG_OUTPUTS - MATRIX_COLS); i++) {
             clock_shift_reg(SHIFT_REG_CLK_PIN);
         }
 
@@ -114,7 +105,7 @@ bool km_poll_keys(repeating_timer_t *timer)
 
     const uint8_t col = g_km_state.current_col;
 
-    for (uint8_t row = 0; row < KEYBOARD_ROWS; row++) {
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
         uint8_t is_pressed = !gpio_get(key_row_pins[row]);
         uint8_t key = key_matrix[row][col];
         uint8_t was_pressed = g_km_state.key_state[key];
@@ -147,7 +138,7 @@ bool km_poll_keys(repeating_timer_t *timer)
 void km_main(void)
 {
     add_repeating_timer_us(
-        KEY_POLL_INTERVAL_US / KEYBOARD_COLS,
+        KEY_POLL_INTERVAL_US / MATRIX_COLS,
         km_poll_keys,
         0,
         &g_km_state.poll_timer

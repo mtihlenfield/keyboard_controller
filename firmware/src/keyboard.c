@@ -8,24 +8,10 @@
 #include "hardware/spi.h"
 #include "hardware/irq.h"
 
+#include "hardware_config.h"
 #include "mcp4921.h"
 #include "key_matrix.h"
 #include "lkp_stack.h"
-
-#define DAC_SPI_PORT spi1
-#define DAC_PIN_CS 13 // GP13
-#define DAC_PIN_SCK 10 // GP10
-#define DAC_PIN_MOSI 11 // GP11
-#define DAC_REFV 2.5 // Using a TL431 in it's default state
-#define DAC_CLK_SPEED (1000 * 1000) // 1Mhz
-
-// Amount of gain applied to the CV signal by our op-amp
-// configuration.
-#define CV_OPAMP_GAIN 3.2
-
-#define GATE_OUT_PIN 5 // GP5
-
-#define LED_PIN 25 // GP25
 
 #define OCTAVE_SHIFT_MAX 1
 #define OCTAVE_SHIFT_MIN -1

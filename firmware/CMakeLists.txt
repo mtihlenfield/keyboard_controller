@@ -18,6 +18,7 @@ add_executable(keyboard
   include/key_matrix.h
   include/list.h
   include/lkp_stack.h
+  include/hardware_config.h
 )
 
 target_include_directories(keyboard PRIVATE include)
