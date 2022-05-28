@@ -12,10 +12,10 @@ pico_sdk_init()
 add_executable(keyboard
   src/keyboard.c
   src/mcp4921.c
-  src/key_matrix.c
+  src/io.c
   src/lkp_stack.c
   include/mcp4921.h
-  include/key_matrix.h
+  include/io.h
   include/list.h
   include/lkp_stack.h
   include/hardware_config.h
@@ -26,7 +26,8 @@ target_include_directories(keyboard PRIVATE include)
 target_link_libraries(keyboard
 	pico_stdlib
 	pico_multicore
-	hardware_spi)
+	hardware_spi
+	hardware_adc)
 
 
 pico_add_extra_outputs(keyboard)

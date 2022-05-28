@@ -4,9 +4,10 @@
 #include "pico/multicore.h"
 #include "pico/util/queue.h"
 #include "hardware/gpio.h"
+#include "hardware/adc.h"
 
 #include "hardware_config.h"
-#include "key_matrix.h"
+#include "io.h"
 
 
 // Determines how frequently the entire key matrix is
@@ -26,12 +27,12 @@ const uint8_t key_matrix[MATRIX_ROWS][MATRIX_COLS] = {
     {KEY_C1, KEY_FS1, KEY_C2, KEY_FS2, KEY_C3, KEY_FS3, KEY_C4, KEY_FS4, KEY_C5, KEY_NONE},
 };
 
-struct km_state {
+struct io_state {
     uint8_t key_state[NUM_MATRIX_KEYS];
     queue_t event_queue;
     uint8_t current_col;
     repeating_timer_t poll_timer;
-} g_km_state;
+} g_io_state;
 
 static inline void clock_shift_reg(int clk_pin)
 {
@@ -42,20 +43,20 @@ static inline void clock_shift_reg(int clk_pin)
     sleep_us(1);
 }
 
-int km_event_queue_ready(void)
+int io_event_queue_ready(void)
 {
-    return !queue_is_empty(&g_km_state.event_queue);
+    return !queue_is_empty(&g_io_state.event_queue);
 }
 
-key_event_t km_event_queue_pop_blocking(void)
+io_event_t io_event_queue_pop_blocking(void)
 {
-    key_event_t temp;
-    queue_remove_blocking(&g_km_state.event_queue, &temp);
+    io_event_t temp;
+    queue_remove_blocking(&g_io_state.event_queue, &temp);
 
     return temp;
 }
 
-int km_init(void)
+int io_init(void)
 {
     gpio_init(SHIFT_REG_CLK_PIN);
     gpio_init(SHIFT_REG_DATA_PIN);
@@ -78,23 +79,33 @@ int km_init(void)
         gpio_pull_up(pin);
     }
 
-    memset(&g_km_state, 0, sizeof(struct km_state));
+    memset(&g_io_state, 0, sizeof(struct io_state));
 
-    queue_init(&g_km_state.event_queue, sizeof(key_event_t), KM_EVENT_QUEUE_SIZE);
+    queue_init(&g_io_state.event_queue, sizeof(io_event_t), IO_EVENT_QUEUE_SIZE);
+
+    adc_init();
+    adc_gpio_init(CLK_SPEED_PIN);
+    adc_gpio_init(CLK_DIV_PIN);
+    adc_gpio_init(SUB_MODE_PIN);
 
     return 0;
 }
 
-bool km_poll_keys(repeating_timer_t *timer)
+/*
+ * Repeating timer function which checks a single column of the matrix for
+ * state changes, pushes any changes to the io event queue, and then
+ * increments the column counter.
+ */
+bool io_poll_keys(repeating_timer_t *timer)
 {
-    if (0 == g_km_state.current_col) {
+    if (0 == g_io_state.current_col) {
         gpio_put(SHIFT_REG_DATA_PIN, 0);
-    } else if (g_km_state.current_col >= MATRIX_COLS) {
+    } else if (g_io_state.current_col >= MATRIX_COLS) {
         for (uint8_t i = 0; i < (SHIFT_REG_OUTPUTS - MATRIX_COLS); i++) {
             clock_shift_reg(SHIFT_REG_CLK_PIN);
         }
 
-        g_km_state.current_col = 0;
+        g_io_state.current_col = 0;
 
         return true;
     } else {
@@ -103,13 +114,13 @@ bool km_poll_keys(repeating_timer_t *timer)
 
     clock_shift_reg(SHIFT_REG_CLK_PIN);
 
-    const uint8_t col = g_km_state.current_col;
+    const uint8_t col = g_io_state.current_col;
 
     for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
         uint8_t is_pressed = !gpio_get(key_row_pins[row]);
         uint8_t key = key_matrix[row][col];
-        uint8_t was_pressed = g_km_state.key_state[key];
-        key_event_t key_event;
+        uint8_t was_pressed = g_io_state.key_state[key];
+        io_event_t io_event;
 
         // TODO debouncing: http://www.ganssle.com/debouncing-pt2.htm
         // https://my.eng.utah.edu/~cs5780/debouncing.pdf
@@ -118,29 +129,45 @@ bool km_poll_keys(repeating_timer_t *timer)
         // with the buttons I plan to use for other functions
         if (is_pressed && !was_pressed) {
             // TODO without these prints the loop happens too quickly
-            key_event = key_event_create(KEY_PRESSED, key);
-            g_km_state.key_state[key] = 1;
+            io_event = io_event_create(IO_KEY_PRESSED, key);
+            g_io_state.key_state[key] = 1;
 
-            queue_add_blocking(&g_km_state.event_queue, &key_event);
+            queue_add_blocking(&g_io_state.event_queue, &io_event);
         } else if (!is_pressed && was_pressed) {
-            key_event = key_event_create(KEY_RELEASED, key);
-            g_km_state.key_state[key] = 0;
+            io_event = io_event_create(IO_KEY_RELEASED, key);
+            g_io_state.key_state[key] = 0;
 
-            queue_add_blocking(&g_km_state.event_queue, &key_event);
+            queue_add_blocking(&g_io_state.event_queue, &io_event);
         }
     }
 
-    g_km_state.current_col++;
+    g_io_state.current_col++;
 
     return true;
 }
 
-void km_main(void)
+void io_main(void)
 {
     add_repeating_timer_us(
         KEY_POLL_INTERVAL_US / MATRIX_COLS,
-        km_poll_keys,
+        io_poll_keys,
         0,
-        &g_km_state.poll_timer
+        &g_io_state.poll_timer
     );
+
+    while (true) {
+	adc_select_input(CLK_SPEED_CHANNEL);
+	uint16_t result = adc_read();
+	printf("CLK SPEED: %d\n");
+
+	adc_select_input(CLK_DIV_CHANNEL);
+	result = adc_read();
+	printf("CLK DIV: %d\n");
+
+	adc_select_input(SUB_MODE_CHANNEL);
+	result = adc_read();
+	printf("SUB MODE: %d\n");
+
+	sleep_ms(500);
+    }
 }

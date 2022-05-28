@@ -10,7 +10,7 @@
 
 #include "hardware_config.h"
 #include "mcp4921.h"
-#include "key_matrix.h"
+#include "io.h"
 #include "lkp_stack.h"
 
 #define OCTAVE_SHIFT_MAX 1
@@ -101,7 +101,7 @@ static inline void play_last_note(struct keyboard_state *state)
 
 void handle_keybed_event(uint8_t event_type, uint32_t key_id)
 {
-    if (KEY_PRESSED == event_type) {
+    if (IO_KEY_PRESSED == event_type) {
         lkp_push_key(&g_state.key_press_stack, key_id);
 
         // If gate is low, this won't matter
@@ -126,7 +126,7 @@ void handle_keybed_event(uint8_t event_type, uint32_t key_id)
 
 void handle_func_key_event(uint8_t event_type, uint32_t key_id)
 {
-    if (KEY_RELEASED == event_type) {
+    if (IO_KEY_RELEASED == event_type) {
         return;
     }
 
@@ -163,27 +163,39 @@ int main(void)
         return 1;
     }
 
-    if (km_init()) {
+    if (io_init()) {
         printf("Failed to init key matrix");
         return 1;
     }
 
-    multicore_launch_core1(km_main);
+    multicore_launch_core1(io_main);
 
     while (1) {
-        while (km_event_queue_ready()) {
+        while (io_event_queue_ready()) {
             uint8_t event_type = 0;
-            uint32_t key_id = 0;
+            uint16_t event_val = 0;
 
-            key_event_t key_event = km_event_queue_pop_blocking();
-            key_event_unpack(key_event, &event_type, &key_id);
-            printf("Key event: type: %d, id: %d\n", event_type, key_id);
+            io_event_t io_event = io_event_queue_pop_blocking();
+            io_event_unpack(io_event, &event_type, &event_val);
+            printf("io event: type: %d, id: %d\n", event_type, event_val);
 
-            if (is_keybed_key(key_id)) {
-                handle_keybed_event(event_type, key_id);
-            } else {
-                handle_func_key_event(event_type, key_id);
-            }
+	    switch (event_type) {
+                case IO_KEY_PRESSED:
+		case IO_KEY_RELEASED:
+                    if (io_is_keybed_key(event_val)) {
+                        handle_keybed_event(event_type, event_val);
+                    } else {
+                        handle_func_key_event(event_type, event_val);
+                    }
+
+		    break;
+		case IO_CLK_SPEED_CHANGED:
+		case IO_CLK_DIV_CHANGED:
+		case IO_MODE_CHANGED:
+		case IO_SUB_MODE_CHANGED:
+		    printf("This IO event not yet implemented\n");
+		    break;
+	    }
         }
     }
 

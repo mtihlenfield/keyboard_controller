@@ -27,4 +27,16 @@
 #define MATRIX_COLS 10
 #define NUM_MATRIX_KEYS (MATRIX_ROWS * MATRIX_COLS)
 
+#define MODEL_SEL_PIN 22 // GP22
+
+#define CLK_SPEED_PIN 26 // GP26
+#define CLK_SPEED_CHANNEL 0
+
+#define CLK_DIV_PIN 27 // GP27
+#define CLK_DIV_CHANNEL 1
+
+
+#define SUB_MODE_PIN 28 // GP28
+#define SUB_MODE_CHANNEL 2
+
 #endif
