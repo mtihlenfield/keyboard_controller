@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include "pico/util/queue.h"
@@ -15,6 +16,10 @@
 // is divided by KEYBOARD_COLS to determine how frequently
 // the poll function runs
 #define KEY_POLL_INTERVAL_US 2000
+
+// The change in clock speed required to trigger an io event
+// for clock speed.
+#define CLOCK_SPEED_DELTA 30
 
 const uint8_t key_row_pins[MATRIX_ROWS] = {16, 17, 18, 19, 20, 21};
 
@@ -32,6 +37,7 @@ struct io_state {
     queue_t event_queue;
     uint8_t current_col;
     repeating_timer_t poll_timer;
+    int16_t clock_speed;
 } g_io_state;
 
 static inline void clock_shift_reg(int clk_pin)
@@ -84,9 +90,20 @@ int io_init(void)
     queue_init(&g_io_state.event_queue, sizeof(io_event_t), IO_EVENT_QUEUE_SIZE);
 
     adc_init();
-    adc_gpio_init(CLK_SPEED_PIN);
-    adc_gpio_init(CLK_DIV_PIN);
-    adc_gpio_init(SUB_MODE_PIN);
+    adc_gpio_init(ANALOG_IN_PIN);
+    adc_select_input(ANALOG_IN_CHANNEL);
+
+    gpio_init(AN_ADDR_A_PIN);
+    gpio_set_dir(AN_ADDR_A_PIN, GPIO_OUT);
+
+    gpio_init(AN_ADDR_B_PIN);
+    gpio_set_dir(AN_ADDR_B_PIN, GPIO_OUT);
+
+    gpio_init(AN_ADDR_C_PIN);
+    gpio_set_dir(AN_ADDR_C_PIN, GPIO_OUT);
+
+    // TODO measure gnd offset
+
 
     return 0;
 }
@@ -155,19 +172,4 @@ void io_main(void)
         &g_io_state.poll_timer
     );
 
-    while (true) {
-	adc_select_input(CLK_SPEED_CHANNEL);
-	uint16_t result = adc_read();
-	printf("CLK SPEED: %d\n");
-
-	adc_select_input(CLK_DIV_CHANNEL);
-	result = adc_read();
-	printf("CLK DIV: %d\n");
-
-	adc_select_input(SUB_MODE_CHANNEL);
-	result = adc_read();
-	printf("SUB MODE: %d\n");
-
-	sleep_ms(500);
-    }
 }

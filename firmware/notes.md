@@ -7,26 +7,22 @@
 - A "rate" or "tempo" knob will let the user set the clock speed when there is no external sync input
     - If there is an external sync input, the rate knob won't do anything
 - A time division knob will let the user choose a division of the clock rate
-- I will have to decide what QQPN to use, or to support multiple and make it configurable (via DIP switches?)
-- First intuition is to use a timer
-    - Can't set gate high and low in same timer, would be too fast. Would probably need two timer pulses per note:
-        - One to bring gate high and select current not
-        - Next one to bring gate low
-    - Time between the two timers determines gate width. Will hard code this to 50% for now, so if the clo/k rate is 10 notes per second, we actually run the timer routine 20 times a second.
-    - The timer route will need to:
-        - Check gate state
-            - If up, bring down
-            - If down, bring up, continue
-        - Determine which note to play
-        - Set CV out
-    - I can keep a pointer to the next note in the sequence and change it on each gate down
-    - Timer shouldn't need to care about current key state or button presses, should only need to worry about the sequence list
-        - Could even abstract that away with a `get_next_note` function.
+- I will have to decide what PPQN to use, or to support multiple and make it configurable (via DIP switches?)
+- I think all of the clock code will exist in the IO thread.
+     - The IO thread will send "QUARTER_NOTE" or "CLOCK" events to the main thread via the queue.
+- First intuition is to use a timer for the internal clock
+     - Do still need to worry about PPQN here - since SYNC out will need to be in whatever PPQN is.
+     - How to handle gate width? I at least want to make sure that it's 50% for now. Could make it configurable later.
+          - This will require some math using the clock speed
 - How to handle external sync signal?
-    - The KORG Volca Bass uses an integrator to split the external clock pulse in to a SYNC_RISE and SYNC_FALL. I like this as it makes it easy to determine exactly when a falling edge happens
     - The mutable instruments anrushri might be a good place to look for examples:
         - Schematics: https://mutable-instruments.net/archive/anushri/build/
         - Code: https://github.com/pichenettes/anushri
+    - One option: interrupt handler
+        - Have an interrupt handler detect rising edge on the SYNC_IN pin.
+        - On each interrupt, increment pulse count
+        - Set SYNC OUT?
+        - Once pulse count reaches PPQN, send QUARTER_NOTE message
 
 
 ## Note Sequence
@@ -43,6 +39,24 @@
     - `uint8_t seq_get_next(struct sequence*, uint8_T mode)`
         - Could have this automatically increment the `next_key` pointer if mode is arp or seq. Not sure yet if I'll want that to be a side effect or explicit
 
+## Analog Inputs
+
+- There will be the following analog inputs:
+    - Clock Speed (potentiometer)
+    - Clock Div (12 position rotary switch)
+    - Sub Mode (N position rotary switch)
+    - Gate time? (potentiometer) - Not sure about this one yet
+    - Portamento? (potentiometer) - Not sure about this one yet
+
+- This may be in part due to the fact that I'm testing on a breadboard, but the analog inputs are noisy. They jump around +-30 units.
+    - This isn't a huge deal for the rotary switches, as I can do something like have clock div 1/4 be `1000 +- 200` or something like that.
+    - For the potentiometers I will probably have to:
+        a) Only act on changes greater than some delta
+        b) Take several samples before acting. Average them?
+- There is also a problem with the Pico's where the ADC always has some decent sized offset
+- I think I may use an analog switch to enable more analog inputs
+    - This way I can add the Gate time and portamento inputs
+    - This will also let me hook one input up to ground, which I can use to determine what the offset is and adjust my calculations accordingly
 
 
 

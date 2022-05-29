@@ -4,6 +4,11 @@
 
   (paper "A4")
 
+  (title_block
+    (title "Key Matrix")
+    (rev "1")
+  )
+
   (lib_symbols
     (symbol "74xx:74HC164" (in_bom yes) (on_board yes)
       (property "Reference" "U" (id 0) (at 1.905 -13.97 0)

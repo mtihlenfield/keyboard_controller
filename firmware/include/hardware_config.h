@@ -29,14 +29,11 @@
 
 #define MODEL_SEL_PIN 22 // GP22
 
-#define CLK_SPEED_PIN 26 // GP26
-#define CLK_SPEED_CHANNEL 0
+#define ANALOG_IN_PIN 26 // GP26
+#define ANALOG_IN_CHANNEL 0
 
-#define CLK_DIV_PIN 27 // GP27
-#define CLK_DIV_CHANNEL 1
-
-
-#define SUB_MODE_PIN 28 // GP28
-#define SUB_MODE_CHANNEL 2
+#define AN_ADDR_A_PIN 6 // GP6
+#define AN_ADDR_B_PIN 7 // GP7
+#define AN_ADDR_C_PIN 8 // GP8
 
 #endif

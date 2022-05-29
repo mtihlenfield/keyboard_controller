@@ -417,7 +417,7 @@
     ],
     [
       "e62cebf1-8b49-4ab0-9851-a340dc04dbf1",
-      "Power"
+      "power"
     ],
     [
       "db9d31eb-90c6-4f42-b97b-d41061869d3f",
@@ -425,7 +425,11 @@
     ],
     [
       "679aab57-7a27-4204-9526-edba148bc933",
-      "input_output"
+      "input_output_jacks"
+    ],
+    [
+      "25f9996e-fca5-4a93-99a2-b5b3536e9922",
+      "analog_input"
     ]
   ],
   "text_variables": {}
