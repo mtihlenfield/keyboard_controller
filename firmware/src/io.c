@@ -17,11 +17,25 @@
 // the poll function runs
 #define KEY_POLL_INTERVAL_US 2000
 
-// The change in clock speed required to trigger an io event
-// for clock speed.
-#define CLOCK_SPEED_DELTA 30
+#define NUM_ANALOG_SAMPLES 16
 
 const uint8_t key_row_pins[MATRIX_ROWS] = {16, 17, 18, 19, 20, 21};
+
+#define AN_EVENT_IDX 0
+#define AN_MASK_IDX 1
+#define AN_THRESHOLD_IDX 2
+#define AN_NUM_CONFIGS 3
+
+#define AN_DEFAULT_THRESHOLD 30
+#define AN_READ_SAMPLES 30
+
+const uint16_t g_analog_config[NUM_ANALOG_INPUTS][AN_NUM_CONFIGS] = {
+    {IO_CLK_SPEED_CHANGED, MASK_CLK_SPEED, AN_DEFAULT_THRESHOLD},
+    {IO_PORTAMENTO_CHANGED, MASK_PORTAMENTO, AN_DEFAULT_THRESHOLD},
+    {IO_GATE_TIME_CHANGED, MASK_GATE_TIME, AN_DEFAULT_THRESHOLD},
+    {IO_CLK_DIV_CHANGED, MASK_CLK_DIV, AN_DEFAULT_THRESHOLD},
+    {IO_SUB_MODE_CHANGED, MASK_SUB_MODE, AN_DEFAULT_THRESHOLD},
+};
 
 const uint8_t key_matrix[MATRIX_ROWS][MATRIX_COLS] = {
     {KEY_OCTAVE_UP, KEY_CS1, KEY_G1, KEY_CS2, KEY_G2, KEY_CS3, KEY_G3, KEY_CS4, KEY_G4, KEY_REST},
@@ -37,12 +51,31 @@ struct io_state {
     queue_t event_queue;
     uint8_t current_col;
     repeating_timer_t poll_timer;
-    int16_t clock_speed;
+    uint16_t analog_values[NUM_ANALOG_INPUTS]; // Indices should match g_analog_config
 } g_io_state;
 
-static inline void clock_shift_reg(int clk_pin)
+static inline uint16_t io_analog_read(uint32_t mask, uint16_t num_samples)
 {
+    sleep_us(1); // TODO figure out a better way to make sure timing is correct.
+    gpio_set_mask(ANALOG_ADDR_MASK & mask);
     sleep_us(1);
+
+    uint32_t temp = 0;
+
+    for (uint16_t i = 0; i < num_samples; i++) {
+        temp += adc_read();
+    }
+
+    sleep_us(1);
+    gpio_clr_mask(ANALOG_ADDR_MASK);
+    sleep_us(1);
+
+    return temp / num_samples;
+}
+
+static inline void io_clock_shift_reg(int clk_pin)
+{
+    sleep_us(1); // TODO figure out a better way to make sure timing is correct.
     gpio_put(SHIFT_REG_CLK_PIN, 1);
     sleep_us(1);
     gpio_put(SHIFT_REG_CLK_PIN, 0);
@@ -74,7 +107,7 @@ int io_init(void)
     // Set all of the shift register outputs high
     gpio_put(SHIFT_REG_DATA_PIN, 1);
     for (uint8_t i = 0; i < SHIFT_REG_OUTPUTS; i++) {
-        clock_shift_reg(SHIFT_REG_CLK_PIN);
+        io_clock_shift_reg(SHIFT_REG_CLK_PIN);
     }
 
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
@@ -102,9 +135,6 @@ int io_init(void)
     gpio_init(AN_ADDR_C_PIN);
     gpio_set_dir(AN_ADDR_C_PIN, GPIO_OUT);
 
-    // TODO measure gnd offset
-
-
     return 0;
 }
 
@@ -119,7 +149,7 @@ bool io_poll_keys(repeating_timer_t *timer)
         gpio_put(SHIFT_REG_DATA_PIN, 0);
     } else if (g_io_state.current_col >= MATRIX_COLS) {
         for (uint8_t i = 0; i < (SHIFT_REG_OUTPUTS - MATRIX_COLS); i++) {
-            clock_shift_reg(SHIFT_REG_CLK_PIN);
+            io_clock_shift_reg(SHIFT_REG_CLK_PIN);
         }
 
         g_io_state.current_col = 0;
@@ -129,7 +159,7 @@ bool io_poll_keys(repeating_timer_t *timer)
         gpio_put(SHIFT_REG_DATA_PIN, 1);
     }
 
-    clock_shift_reg(SHIFT_REG_CLK_PIN);
+    io_clock_shift_reg(SHIFT_REG_CLK_PIN);
 
     const uint8_t col = g_io_state.current_col;
 
@@ -171,5 +201,26 @@ void io_main(void)
         0,
         &g_io_state.poll_timer
     );
+
+    uint16_t current_value = 0;
+    uint16_t read_result = 0;
+    uint16_t delta = 0;
+    uint16_t threshold = 0;
+    while (true) {
+        for (uint8_t i = 0; i < NUM_ANALOG_INPUTS; i++) {
+            current_value = g_io_state.analog_values[i];
+            read_result = io_analog_read(g_analog_config[i][AN_MASK_IDX], AN_READ_SAMPLES);
+
+            threshold = g_analog_config[i][AN_THRESHOLD_IDX];
+
+            delta = abs(current_value - read_result);
+            if (delta > threshold) {
+                g_io_state.analog_values[i] = read_result;
+                printf("Param %d changed to %d. Delta: %d\n", i, read_result, delta);
+            }
+        }
+    }
+
+
 
 }

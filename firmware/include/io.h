@@ -14,9 +14,11 @@ enum io_event {
     IO_KEY_RELEASED = 0,
     IO_KEY_PRESSED = 1,
     IO_CLK_SPEED_CHANGED = 2,
-    IO_CLK_DIV_CHANGED = 3,
-    IO_MODE_CHANGED = 4,
-    IO_SUB_MODE_CHANGED = 5
+    IO_GATE_TIME_CHANGED = 3,
+    IO_PORTAMENTO_CHANGED = 4,
+    IO_CLK_DIV_CHANGED = 5,
+    IO_SUB_MODE_CHANGED = 6,
+    IO_MODE_CHANGED = 7
 };
 
 enum key_id {

@@ -36,4 +36,14 @@
 #define AN_ADDR_B_PIN 7 // GP7
 #define AN_ADDR_C_PIN 8 // GP8
 
+#define NUM_ANALOG_INPUTS 5
+
+#define ANALOG_ADDR_MASK (7 << 6)
+#define MASK_CLK_SPEED 0
+#define MASK_PORTAMENTO (1 << 6)
+#define MASK_GATE_TIME (2 << 6)
+#define MASK_CLK_DIV (3 << 6)
+#define MASK_SUB_MODE (4 << 6)
+#define MASK_GND (5 << 6)
+
 #endif
