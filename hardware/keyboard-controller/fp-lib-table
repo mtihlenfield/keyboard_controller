@@ -4,4 +4,6 @@
   (lib (name "WEALTH_METAL_Barrel_Jacks")(type "KiCad")(uri "${KIPRJMOD}/../libraries/WEALTH_METAL_Barrel_Jacks.pretty")(options "")(descr ""))
   (lib (name "AudioJacks")(type "KiCad")(uri "${KIPRJMOD}/../libraries/AudioJacks/AudioJacks.pretty")(options "")(descr ""))
   (lib (name "AEC_Capacitors")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/AEC_Capacitors.pretty")(options "")(descr ""))
+  (lib (name "Rotary_Switch_Alpha")(type "KiCad")(uri "/home/strav/devel/diy-synth/power-supply/libraries/Rotary_Switch_Alpha.pretty")(options "")(descr ""))
+  (lib (name "SamacSys_Parts")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/SamacSys_Parts/SamacSys_Parts.pretty")(options "")(descr ""))
 )
