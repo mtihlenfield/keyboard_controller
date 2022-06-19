@@ -143,9 +143,9 @@ int main(void)
 
     printf("Starting keyboard controller!\n");
 
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
-    gpio_put(LED_PIN, 1);
+    gpio_init(PWR_LED_PIN);
+    gpio_set_dir(PWR_LED_PIN, GPIO_OUT);
+    gpio_put(PWR_LED_PIN, 1);
 
     gpio_init(GATE_OUT_PIN);
     gpio_set_dir(GATE_OUT_PIN, GPIO_OUT);
@@ -179,23 +179,23 @@ int main(void)
             io_event_unpack(io_event, &event_type, &event_val);
             printf("io event: type: %d, id: %d\n", event_type, event_val);
 
-	    switch (event_type) {
-                case IO_KEY_PRESSED:
-		case IO_KEY_RELEASED:
-                    if (io_is_keybed_key(event_val)) {
-                        handle_keybed_event(event_type, event_val);
-                    } else {
-                        handle_func_key_event(event_type, event_val);
-                    }
+	    // switch (event_type) {
+            //     case IO_KEY_PRESSED:
+	    //     case IO_KEY_RELEASED:
+            //         if (io_is_keybed_key(event_val)) {
+            //             handle_keybed_event(event_type, event_val);
+            //         } else {
+            //             handle_func_key_event(event_type, event_val);
+            //         }
 
-		    break;
-		case IO_CLK_SPEED_CHANGED:
-		case IO_CLK_DIV_CHANGED:
-		case IO_MODE_CHANGED:
-		case IO_SUB_MODE_CHANGED:
-		    printf("This IO event not yet implemented\n");
-		    break;
-	    }
+	    //         break;
+	    //     case IO_CLK_SPEED_CHANGED:
+	    //     case IO_CLK_DIV_CHANGED:
+	    //     case IO_MODE_CHANGED:
+	    //     case IO_SUB_MODE_CHANGED:
+	    //         printf("This IO event not yet implemented\n");
+	    //         break;
+	    // }
         }
     }
 

@@ -19,7 +19,10 @@
 
 #define NUM_ANALOG_SAMPLES 16
 
-const uint8_t key_row_pins[MATRIX_ROWS] = {16, 17, 18, 19, 20, 21};
+const uint8_t key_row_pins[MATRIX_ROWS] = {
+    MATRIX_R1_PIN, MATRIX_R2_PIN, MATRIX_R3_PIN,
+    MATRIX_R4_PIN, MATRIX_R5_PIN, MATRIX_R6_PIN
+};
 
 #define AN_EVENT_IDX 0
 #define AN_MASK_IDX 1
@@ -41,7 +44,7 @@ const uint8_t key_matrix[MATRIX_ROWS][MATRIX_COLS] = {
     {KEY_OCTAVE_UP, KEY_CS1, KEY_G1, KEY_CS2, KEY_G2, KEY_CS3, KEY_G3, KEY_CS4, KEY_G4, KEY_REST},
     {KEY_OCTAVE_DOWN, KEY_D1, KEY_GS1, KEY_D2, KEY_GS2, KEY_D3, KEY_GS3, KEY_D4, KEY_GS4, KEY_HOLD},
     {KEY_PLAY_PAUSE, KEY_DS1, KEY_A1, KEY_DS2, KEY_A2, KEY_DS3, KEY_A3, KEY_DS4, KEY_A4, KEY_FUNC},
-    {KEY_RECORD, KEY_E1, KEY_AS1, KEY_E2, KEY_AS2, KEY_E3, KEY_AS3, KEY_E4, KEY_AS4, KEY_NONE},
+    {KEY_RECORD, KEY_E1, KEY_AS1, KEY_E2, KEY_AS2, KEY_E3, KEY_AS3, KEY_E4, KEY_AS4, KEY_MODE},
     {KEY_STOP, KEY_F1, KEY_B1, KEY_F2, KEY_B2, KEY_F3, KEY_B3, KEY_F4, KEY_B4, KEY_NONE},
     {KEY_C1, KEY_FS1, KEY_C2, KEY_FS2, KEY_C3, KEY_FS3, KEY_C4, KEY_FS4, KEY_C5, KEY_NONE},
 };
@@ -58,7 +61,7 @@ static inline uint16_t io_analog_read(uint32_t mask, uint16_t num_samples)
 {
     sleep_us(1); // TODO figure out a better way to make sure timing is correct.
     gpio_set_mask(ANALOG_ADDR_MASK & mask);
-    sleep_us(1);
+    sleep_us(10);
 
     uint32_t temp = 0;
 
@@ -68,7 +71,7 @@ static inline uint16_t io_analog_read(uint32_t mask, uint16_t num_samples)
 
     sleep_us(1);
     gpio_clr_mask(ANALOG_ADDR_MASK);
-    sleep_us(1);
+    sleep_us(10);
 
     return temp / num_samples;
 }
@@ -135,6 +138,18 @@ int io_init(void)
     gpio_init(AN_ADDR_C_PIN);
     gpio_set_dir(AN_ADDR_C_PIN, GPIO_OUT);
 
+    gpio_init(SYNC_CN_PIN);
+    gpio_set_dir(SYNC_CN_PIN, GPIO_IN);
+    gpio_disable_pulls(SYNC_CN_PIN);
+
+    gpio_init(SYNC_IN_PIN);
+    gpio_set_dir(SYNC_IN_PIN, GPIO_IN);
+    gpio_disable_pulls(SYNC_IN_PIN);
+
+    gpio_init(SYNC_OUT_PIN);
+    gpio_set_dir(SYNC_OUT_PIN, GPIO_OUT);
+    gpio_pull_down(SYNC_OUT_PIN);
+
     return 0;
 }
 
@@ -179,12 +194,12 @@ bool io_poll_keys(repeating_timer_t *timer)
             io_event = io_event_create(IO_KEY_PRESSED, key);
             g_io_state.key_state[key] = 1;
 
-            queue_add_blocking(&g_io_state.event_queue, &io_event);
+            queue_try_add(&g_io_state.event_queue, &io_event);
         } else if (!is_pressed && was_pressed) {
             io_event = io_event_create(IO_KEY_RELEASED, key);
             g_io_state.key_state[key] = 0;
 
-            queue_add_blocking(&g_io_state.event_queue, &io_event);
+            queue_try_add(&g_io_state.event_queue, &io_event);
         }
     }
 
@@ -202,24 +217,48 @@ void io_main(void)
         &g_io_state.poll_timer
     );
 
-    uint16_t current_value = 0;
-    uint16_t read_result = 0;
-    uint16_t delta = 0;
-    uint16_t threshold = 0;
+    uint8_t sync_cn = 0;
+    uint8_t sync = 0;
+    uint8_t new_sync_cn = 0;
+    uint8_t new_sync = 0;
     while (true) {
-        for (uint8_t i = 0; i < NUM_ANALOG_INPUTS; i++) {
-            current_value = g_io_state.analog_values[i];
-            read_result = io_analog_read(g_analog_config[i][AN_MASK_IDX], AN_READ_SAMPLES);
+        new_sync = gpio_get(SYNC_IN_PIN);
+        new_sync_cn = gpio_get(SYNC_CN_PIN);
 
-            threshold = g_analog_config[i][AN_THRESHOLD_IDX];
+        if (new_sync_cn != sync_cn) {
+            printf("Sync CN: %d\n", new_sync_cn);
+            sync_cn = new_sync_cn;
+        }
 
-            delta = abs(current_value - read_result);
-            if (delta > threshold) {
-                g_io_state.analog_values[i] = read_result;
-                printf("Param %d changed to %d. Delta: %d\n", i, read_result, delta);
+        if (sync_cn) {
+            if (new_sync != sync) {
+                printf("Sync: %d\n", new_sync);
+                sync = new_sync;
             }
         }
+
     }
+
+    // uint16_t current_value = 0;
+    // uint16_t read_result = 0;
+    // uint16_t delta = 0;
+    // uint16_t threshold = 0;
+    // while (true) {
+    //     // TODO: There seems to be a dead spot right around 1330-1770 (it moves a little) on all of the pots....
+    //     // TODO: Param 0 seems to be affected by the other inputs occasionally...
+    //     for (uint8_t i = 0; i < NUM_ANALOG_INPUTS; i++) {
+    //         current_value = g_io_state.analog_values[i];
+    //         read_result = io_analog_read(g_analog_config[i][AN_MASK_IDX], AN_READ_SAMPLES);
+
+    //         threshold = g_analog_config[i][AN_THRESHOLD_IDX];
+
+    //         delta = abs(current_value - read_result);
+    //         if (delta > threshold) {
+    //             g_io_state.analog_values[i] = read_result;
+    //             printf("Param %d changed to %d. Delta: %d\n", i, read_result, delta);
+    //         }
+    //     }
+    // }
 
 
 
