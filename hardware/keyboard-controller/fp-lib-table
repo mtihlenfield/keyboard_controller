@@ -6,4 +6,6 @@
   (lib (name "AEC_Capacitors")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/AEC_Capacitors.pretty")(options "")(descr ""))
   (lib (name "Rotary_Switch_Alpha")(type "KiCad")(uri "/home/strav/devel/diy-synth/power-supply/libraries/Rotary_Switch_Alpha.pretty")(options "")(descr ""))
   (lib (name "SamacSys_Parts")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/SamacSys_Parts/SamacSys_Parts.pretty")(options "")(descr ""))
+  (lib (name "Alpha_Potentiometers")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/SamacSys_Parts/Alpha_Potentiometers.pretty")(options "")(descr ""))
+  (lib (name "Wealth_Metal_Switches")(type "KiCad")(uri "/home/strav/devel/diy-synth/keyboard/hardware/libraries/SamacSys_Parts/Wealth_Metal_Switches.pretty")(options "")(descr ""))
 )

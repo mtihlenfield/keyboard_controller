@@ -40,7 +40,7 @@
   (pad "10" thru_hole circle (at 7.778 13.472) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp 699b7087-8d13-4712-a531-77ca5cfabad2))
   (pad "11" thru_hole circle (at 2.847 10.625) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp d2413d78-aa87-490c-a92c-28f2652f00cf))
   (pad "12" thru_hole circle (at 0 5.694) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp df49b8c3-56d2-4c49-beae-5dfdf8d4c170))
-  (pad "A1" thru_hole circle (at 7.797 0.019) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp 173dbb59-ccba-4d9c-8da5-1a077eba4da3))
+  (pad "13" thru_hole circle (at 7.797 0.019) (size 2.1 2.1) (drill 1.4) (layers *.Cu *.Mask) (tstamp 173dbb59-ccba-4d9c-8da5-1a077eba4da3))
   (model "/home/strav/devel/diy-synth/keyboard/hardware/libraries/SamacSys_Parts/SamacSys_Parts.3dshapes/SR2612F-0112-38F5B-D8-S.stp"
     (offset (xyz 0 0 0))
     (scale (xyz 1 1 1))
