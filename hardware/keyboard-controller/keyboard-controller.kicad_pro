@@ -33,9 +33,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.762,
-          "height": 1.524,
-          "width": 1.524
+          "drill": 3.2,
+          "height": 3.2,
+          "width": 3.2
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -55,7 +55,20 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "silk_over_copper|261378299|70391700|cd3120ce-3528-4c37-9287-62587f90b00b|0f5fbfc7-c6e4-4e71-8402-ebb5ee0b77bd",
+        "silk_over_copper|261378299|70437243|cd3120ce-3528-4c37-9287-62587f90b00b|0f5fbfc7-c6e4-4e71-8402-ebb5ee0b77bd",
+        "silk_over_copper|262028299|70391700|a08f498d-9b33-4b59-b3b2-8245f14de59f|0f5fbfc7-c6e4-4e71-8402-ebb5ee0b77bd",
+        "silk_over_copper|262028299|70437243|a08f498d-9b33-4b59-b3b2-8245f14de59f|0f5fbfc7-c6e4-4e71-8402-ebb5ee0b77bd",
+        "silk_over_copper|282246282|70307100|d87ae83f-e26c-4e4a-87fa-2b1bc7aba021|4a11f20e-71ce-40a8-a700-0785e06b87fa",
+        "silk_over_copper|282896282|70307100|108a20e2-5cdf-4475-8b77-9dfd3bdbc7c5|4a11f20e-71ce-40a8-a700-0785e06b87fa",
+        "silk_over_copper|303114215|70580939|e65eeda2-4ae7-44ce-8676-3a763169608f|0daabaac-cc6c-41d4-951b-429d2aa6a736",
+        "silk_over_copper|303764215|70580939|f4015cc9-f980-4452-a2dc-dabee7bf9041|0daabaac-cc6c-41d4-951b-429d2aa6a736",
+        "silk_over_copper|323982200|70422342|1393d29a-1320-4658-bd58-7a14158d7aa4|45c9922f-77ad-4bb6-a258-7b79489b14e9",
+        "silk_over_copper|324632200|70422342|8a6bcdf3-a4b9-4cb9-9719-507d3ec23453|45c9922f-77ad-4bb6-a258-7b79489b14e9",
+        "silk_over_copper|352000000|170449100|c50dc047-109d-4f5f-8856-9b5ce55081ac|b33b1f46-5ba9-4fe3-ba4b-5b759816a92d",
+        "silk_over_copper|352000000|179649100|c50dc047-109d-4f5f-8856-9b5ce55081ac|4a71853c-8784-46a8-a800-1ec9307c01de"
+      ],
       "meta": {
         "version": 2
       },
@@ -376,7 +389,9 @@
     "meta": {
       "version": 2
     },
-    "net_colors": null
+    "net_colors": {
+      "+9V": "rgb(116, 30, 29)"
+    }
   },
   "pcbnew": {
     "last_paths": {
