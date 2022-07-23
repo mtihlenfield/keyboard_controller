@@ -3054,19 +3054,19 @@
       (reference "SW5") (unit 1) (value "PLAY_PAUSE") (footprint "Button_Switch_THT:SW_PUSH_6mm")
     )
     (path "/db9d31eb-90c6-4f42-b97b-d41061869d3f/5288b800-08bc-4a3c-a5b1-aa45ad82fb5c"
-      (reference "SW6") (unit 1) (value "RECORD") (footprint "Button_Switch_THT:SW_PUSH_6mm")
+      (reference "SW6") (unit 1) (value "STOP") (footprint "Button_Switch_THT:SW_PUSH_6mm")
     )
     (path "/db9d31eb-90c6-4f42-b97b-d41061869d3f/d902af4b-4ce3-4dea-85f2-a5b202135233"
-      (reference "SW7") (unit 1) (value "STOP") (footprint "Button_Switch_THT:SW_PUSH_6mm")
+      (reference "SW7") (unit 1) (value "RECORD") (footprint "Button_Switch_THT:SW_PUSH_6mm")
     )
     (path "/db9d31eb-90c6-4f42-b97b-d41061869d3f/b714588e-886b-49ef-ab6b-806cda5682f1"
-      (reference "SW8") (unit 1) (value "REST") (footprint "Button_Switch_THT:SW_PUSH_6mm")
+      (reference "SW8") (unit 1) (value "HOLD") (footprint "Button_Switch_THT:SW_PUSH_6mm")
     )
     (path "/db9d31eb-90c6-4f42-b97b-d41061869d3f/c5f7c085-b31f-470f-885e-5a6fbfe8ad99"
-      (reference "SW9") (unit 1) (value "HOLD") (footprint "Button_Switch_THT:SW_PUSH_6mm")
+      (reference "SW9") (unit 1) (value "FUNC") (footprint "Button_Switch_THT:SW_PUSH_6mm")
     )
     (path "/db9d31eb-90c6-4f42-b97b-d41061869d3f/77379abe-46b7-40cc-becc-716789b2fc4e"
-      (reference "SW10") (unit 1) (value "FUNCTION") (footprint "Button_Switch_THT:SW_PUSH_6mm")
+      (reference "SW10") (unit 1) (value "REST") (footprint "Button_Switch_THT:SW_PUSH_6mm")
     )
     (path "/25f9996e-fca5-4a93-99a2-b5b3536e9922/721cfd4f-762e-46b2-96cc-2750183010a5"
       (reference "SW11") (unit 1) (value "CLK_DIV") (footprint "Keyboard:Clock_Div_Switch")
